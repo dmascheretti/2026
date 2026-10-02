@@ -68,8 +68,10 @@ def wrap(angle):
 
 
 def compute_metrics(d):
-    """Metrics while the motors run, after the take-off transient."""
-    active = (d["stopped"] == 0) & (d["t"] >= SETTLE_TIME)
+    """Metrics while the motors run, after the take-off transient
+    (SETTLE_TIME after the first active sample, i.e. after arming)."""
+    first_active = d["t"][np.argmax(d["stopped"] == 0)]
+    active = (d["stopped"] == 0) & (d["t"] >= first_active + SETTLE_TIME)
     m = {}
     track = np.stack([d[f"true_p{a}"] - d[f"ref_p{a}"] for a in "xyz"])[:, active]
     est_p = np.stack([d[f"est_p{a}"] - d[f"true_p{a}"] for a in "xyz"])[:, active]
@@ -84,7 +86,7 @@ def compute_metrics(d):
         d["est_pitch"][active] - d["true_pitch"][active]]))
     m["tilt_rms_rad"] = rms(np.hypot(d["true_roll"][active], d["true_pitch"][active]))
     m["max_solve_time_ms"] = 1000.0 * float(d["solve_time"].max())
-    stopped = np.nonzero(d["stopped"] > 0)[0]
+    stopped = np.nonzero((d["stopped"] > 0) & (d["t"] > first_active))[0]
     m["stop_time_s"] = float(d["t"][stopped[0]]) if len(stopped) else float("nan")
     return m
 
@@ -101,7 +103,8 @@ def legend_above(ax):
 
 
 def mark_stop(ax, d):
-    stopped = np.nonzero(d["stopped"] > 0)[0]
+    first_active = d["t"][np.argmax(d["stopped"] == 0)]
+    stopped = np.nonzero((d["stopped"] > 0) & (d["t"] > first_active))[0]
     if len(stopped):
         t_stop = d["t"][stopped[0]]
         ax.axvline(t_stop, color=TEXT_MUTED, linewidth=1.0, linestyle=":")
