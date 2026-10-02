@@ -80,3 +80,14 @@ target_compile_definitions(test_cf_ekf PRIVATE
   CF_EKF_CONFIG="${CMAKE_SOURCE_DIR}/ros2_ws/src/cf_ekf/config/ekf.yaml")
 target_link_libraries(test_cf_ekf cf_ekf_core GTest::gtest_main)
 add_test(NAME test_cf_ekf COMMAND test_cf_ekf)
+
+# ---- safety supervisor ----
+add_library(cf_safety_core ros2_ws/src/cf_bringup/src/safety_supervisor.cpp)
+target_include_directories(cf_safety_core PUBLIC ros2_ws/src/cf_bringup/include)
+target_link_libraries(cf_safety_core PUBLIC Eigen3::Eigen yaml-cpp)
+
+add_executable(test_cf_safety ros2_ws/src/cf_bringup/test/test_safety_supervisor.cpp)
+target_compile_definitions(test_cf_safety PRIVATE
+  CF_SAFETY_CONFIG="${CMAKE_SOURCE_DIR}/ros2_ws/src/cf_bringup/config/safety.yaml")
+target_link_libraries(test_cf_safety cf_safety_core GTest::gtest_main)
+add_test(NAME test_cf_safety COMMAND test_cf_safety)

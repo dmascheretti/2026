@@ -1,0 +1,10 @@
+# Safety supervisor limits. Independent of the MPC limits on purpose:
+# the supervisor must hold even if the MPC is misconfigured.
+max_tilt: 0.40                # rad   clamp on roll and pitch commands
+max_yaw_rate: 1.5             # rad/s clamp on yaw-rate command
+max_thrust_pwm: 60000.0       # -     clamp on per-motor thrust command
+                              #       (MPC max is ~59400, see mpc_tuning.yaml)
+watchdog_timeout: 0.1         # s     estimate or command older -> stop
+max_solver_failures: 5        # -     consecutive MPC failures -> stop
+geofence_min: [-1.0, -1.0, -0.1]  # m  box in world frame; outside -> stop
+geofence_max: [1.0, 1.0, 1.5]     # m
