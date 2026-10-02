@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>cf_mpc</name>
+  <version>0.1.0</version>
+  <description>Linear position MPC (acados) for the Crazyflie, outputs attitude + thrust setpoints.</description>
+  <maintainer email="davide.maske04@gmail.com">dmascheretti</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>cf_msgs</depend>
+  <depend>eigen</depend>
+  <depend>yaml-cpp</depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

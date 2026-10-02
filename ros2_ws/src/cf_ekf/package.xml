@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>cf_ekf</name>
+  <version>0.1.0</version>
+  <description>Offboard EKF for the Crazyflie with Flow deck (IMU + ToF + optical flow).</description>
+  <maintainer email="davide.maske04@gmail.com">dmascheretti</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>crazyflie_interfaces</depend>
+  <depend>eigen</depend>
+  <depend>yaml-cpp</depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

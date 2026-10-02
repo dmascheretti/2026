@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>cf_bringup</name>
+  <version>0.1.0</version>
+  <description>Launch files, configuration, safety supervisor, kill switch, mission and simulator bridge.</description>
+  <maintainer email="davide.maske04@gmail.com">dmascheretti</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>cf_msgs</depend>
+  <depend>crazyflie_interfaces</depend>
+  <depend>eigen</depend>
+  <depend>yaml-cpp</depend>
+  <exec_depend>cf_mpc</exec_depend>
+  <exec_depend>cf_ekf</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

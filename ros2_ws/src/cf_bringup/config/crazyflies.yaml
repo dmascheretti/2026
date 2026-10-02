@@ -1,0 +1,53 @@
+# Crazyswarm2 configuration for MPC flights (fileversion 3).
+# Set the URI of YOUR drone. The robot name (cf231) is the ROS namespace and
+# must match the "name" argument of flight.launch.py.
+fileversion: 3
+
+robots:
+  cf231:
+    enabled: true
+    uri: radio://0/80/2M/E7E7E7E7E7
+    initial_position: [0.0, 0.0, 0.0]
+    type: cf21_flow
+
+robot_types:
+  cf21_flow:
+    motion_capture:
+      tracking: "vendor"        # not used (mocap disabled in the launch file)
+      marker: default_single_marker
+      dynamics: default
+    big_quad: false
+    battery:
+      voltage_warning: 3.8      # V
+      voltage_critical: 3.7     # V
+
+all:
+  firmware_logging:
+    enabled: true
+    default_topics:
+      pose:
+        frequency: 10           # Hz, stock onboard estimate (for comparison)
+    custom_topics:
+      # Inputs of our offboard EKF. Each block must fit in one radio packet
+      # (max 26 bytes): 6 floats = 24 bytes.
+      imu:
+        frequency: 100          # Hz
+        vars: ["acc.x", "acc.y", "acc.z", "gyro.x", "gyro.y", "gyro.z"]
+      flow:
+        frequency: 100          # Hz
+        vars: ["motion.deltaX", "motion.deltaY", "range.zrange"]
+      # Stock onboard estimate for the sim-to-real comparison.
+      stock_velocity:
+        frequency: 50           # Hz
+        vars: ["stateEstimate.vx", "stateEstimate.vy", "stateEstimate.vz",
+               "stateEstimate.roll", "stateEstimate.pitch", "stateEstimate.yaw"]
+  firmware_params:
+    commander:
+      enHighLevel: 0            # we send low-level setpoints only
+    stabilizer:
+      estimator: 2              # 2 = onboard Kalman (stock, with Flow deck)
+      controller: 1             # 1 = PID attitude controller (tracks our setpoints)
+  reference_frame: "world"
+  broadcasts:
+    num_repeats: 15
+    delay_between_repeats_ms: 1
