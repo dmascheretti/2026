@@ -7,6 +7,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(cf_mpc_ekf CXX)
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Wall -Wextra -Wpedantic)
@@ -64,3 +68,15 @@ target_link_libraries(test_cf_mpc cf_mpc_core GTest::gtest_main)
 set_target_properties(test_cf_mpc PROPERTIES
   BUILD_RPATH "${CF_MPC_GENERATED_DIR};${ACADOS_INSTALL_DIR}/lib")
 add_test(NAME test_cf_mpc COMMAND test_cf_mpc)
+
+# ---- EKF ----
+add_library(cf_ekf_core ros2_ws/src/cf_ekf/src/ekf.cpp)
+target_include_directories(cf_ekf_core PUBLIC ros2_ws/src/cf_ekf/include)
+target_link_libraries(cf_ekf_core PUBLIC cf_model)
+
+add_executable(test_cf_ekf ros2_ws/src/cf_ekf/test/test_ekf.cpp)
+target_compile_definitions(test_cf_ekf PRIVATE
+  CF_PARAMS_FILE="${CF_PARAMS_FILE}"
+  CF_EKF_CONFIG="${CMAKE_SOURCE_DIR}/ros2_ws/src/cf_ekf/config/ekf.yaml")
+target_link_libraries(test_cf_ekf cf_ekf_core GTest::gtest_main)
+add_test(NAME test_cf_ekf COMMAND test_cf_ekf)

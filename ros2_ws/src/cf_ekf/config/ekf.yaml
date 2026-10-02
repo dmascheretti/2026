@@ -1,0 +1,16 @@
+# EKF tuning: noise standard deviations assumed by the filter.
+# These are filter settings (how much the filter trusts each signal), not
+# measured sensor specs; they start from sensor datasheet orders of
+# magnitude and are tuned on logged flight data.
+accel_noise: 0.5            # m/s^2     accelerometer, enters velocity
+gyro_noise: 0.05            # rad/s     gyroscope, enters attitude
+position_noise: 0.0         # m/sqrt(s) extra random walk on position
+range_noise: 0.01           # m         ToF height sensor (VL53L1x)
+flow_noise: 2.0             # pixels    optical flow, per sample
+range_max: 4.0              # m         ignore range readings above this
+flow_min_height: 0.1        # m         flow is unusable closer than this
+outlier_threshold: 25.0     # -         reject if Mahalanobis^2 > this
+
+initial_position_std: 0.1   # m
+initial_velocity_std: 0.1   # m/s
+initial_attitude_std: 0.05  # rad
