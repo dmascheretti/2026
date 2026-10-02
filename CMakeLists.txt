@@ -70,11 +70,11 @@ set_target_properties(test_cf_mpc PROPERTIES
 add_test(NAME test_cf_mpc COMMAND test_cf_mpc)
 
 # ---- EKF ----
-add_library(cf_ekf_core ros2_ws/src/cf_ekf/src/ekf.cpp)
+add_library(cf_ekf_core ros2_ws/src/cf_ekf/src/ekf.cpp ros2_ws/src/cf_ekf/src/crazyflie_logs.cpp)
 target_include_directories(cf_ekf_core PUBLIC ros2_ws/src/cf_ekf/include)
 target_link_libraries(cf_ekf_core PUBLIC cf_model)
 
-add_executable(test_cf_ekf ros2_ws/src/cf_ekf/test/test_ekf.cpp)
+add_executable(test_cf_ekf ros2_ws/src/cf_ekf/test/test_ekf.cpp ros2_ws/src/cf_ekf/test/test_crazyflie_logs.cpp)
 target_compile_definitions(test_cf_ekf PRIVATE
   CF_PARAMS_FILE="${CF_PARAMS_FILE}"
   CF_EKF_CONFIG="${CMAKE_SOURCE_DIR}/ros2_ws/src/cf_ekf/config/ekf.yaml")
@@ -82,11 +82,13 @@ target_link_libraries(test_cf_ekf cf_ekf_core GTest::gtest_main)
 add_test(NAME test_cf_ekf COMMAND test_cf_ekf)
 
 # ---- safety supervisor ----
-add_library(cf_safety_core ros2_ws/src/cf_bringup/src/safety_supervisor.cpp)
+add_library(cf_safety_core ros2_ws/src/cf_bringup/src/safety_supervisor.cpp
+  ros2_ws/src/cf_bringup/src/crazyflie_interface.cpp)
 target_include_directories(cf_safety_core PUBLIC ros2_ws/src/cf_bringup/include)
 target_link_libraries(cf_safety_core PUBLIC Eigen3::Eigen yaml-cpp)
 
-add_executable(test_cf_safety ros2_ws/src/cf_bringup/test/test_safety_supervisor.cpp)
+add_executable(test_cf_safety ros2_ws/src/cf_bringup/test/test_safety_supervisor.cpp
+  ros2_ws/src/cf_bringup/test/test_crazyflie_interface.cpp)
 target_compile_definitions(test_cf_safety PRIVATE
   CF_SAFETY_CONFIG="${CMAKE_SOURCE_DIR}/ros2_ws/src/cf_bringup/config/safety.yaml")
 target_link_libraries(test_cf_safety cf_safety_core GTest::gtest_main)
