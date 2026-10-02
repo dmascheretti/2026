@@ -6,10 +6,15 @@ sample_time: 0.02          # s   (50 Hz)
 horizon_steps: 25          # -   (0.5 s look-ahead)
 
 # Diagonal state weights, order [px, py, pz, vx, vy, vz, phi, theta]
-state_weights: [40.0, 40.0, 60.0, 4.0, 4.0, 6.0, 0.5, 0.5]
+# Roll/pitch get no weight: penalising them makes the MPC "speed up" the
+# onboard attitude loop by feeding back the estimated angle, which together
+# with the radio delay excites a ~3 Hz oscillation (seen in simulation).
+state_weights: [5.0, 5.0, 40.0, 1.0, 1.0, 4.0, 0.0, 0.0]
 # Diagonal input weights, order [phi_cmd, theta_cmd, thrust_delta]
 # (thrust_delta is in N and much smaller than 1, so its weight is larger)
-input_weights: [4.0, 4.0, 200.0]
+# Equivalent LQR gains: 0.40 rad/m and 0.37 rad/(m/s) horizontally. Higher
+# gains amplify the EKF velocity noise (~5 cm/s) into visible tilt jitter.
+input_weights: [30.0, 30.0, 200.0]
 
 # Input bounds
 max_tilt: 0.35             # rad (20 deg), applies to phi_cmd and theta_cmd
