@@ -17,3 +17,6 @@ __pycache__/
 *.mcap
 .vscode/
 .idea/
+
+# Top-level CMake build
+build/

@@ -10,7 +10,7 @@ import yaml
 
 PARAMS_FILE = Path(__file__).parent / "params.yaml"
 REQUIRED_FIELDS = ["value", "unit", "source", "status"]
-ALLOWED_STATUS = ["datasheet", "literature", "own_id"]
+ALLOWED_STATUS = ["constant", "datasheet", "literature", "assumed", "own_id"]
 
 
 def check(params):

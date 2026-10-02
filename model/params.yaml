@@ -4,9 +4,12 @@
 #   value   numeric value (scalar or list)
 #   unit    SI unit
 #   source  where the number comes from (key into `sources` below)
-#   status  datasheet | literature | own_id
+#   status  constant | datasheet | literature | assumed | own_id
+#             constant   = physical constant
 #             datasheet  = manufacturer number
 #             literature = measured by someone else on a Crazyflie 2.0/2.1
+#             assumed    = placeholder guess, MUST be replaced by own_id
+#                          before any hardware flight that depends on it
 #             own_id     = measured by us on our own vehicle
 #
 # Values marked `literature` were identified on a Crazyflie 2.0 (same frame
@@ -22,13 +25,15 @@ sources:
   foerster2015: "J. Foerster, System Identification of the Crazyflie 2.0 Nano Quadrocopter, BSc thesis, ETH Zurich, 2015"
   standard: "Standard physical constant"
   cf_firmware: "Crazyflie firmware: motor command is a uint16 (github.com/bitcraze/crazyflie-firmware)"
+  cf_firmware_flow: "Crazyflie firmware, optical flow measurement model (src/modules/src/kalman_core/mm_flow.c)"
+  placeholder: "Placeholder guess, no source yet. To be identified (see docs/identification.md)"
 
 environment:
   gravity:
     value: 9.81
     unit: m/s^2
     source: standard
-    status: datasheet
+    status: constant
 
 body:
   mass_base:
@@ -85,3 +90,35 @@ rotor:
     unit: "-"
     source: cf_firmware
     status: datasheet
+  motor_time_constant:
+    # First-order lag between commanded and actual rotor thrust.
+    # Used only by the simulator plant, not by the MPC.
+    value: 0.03
+    unit: s
+    source: placeholder
+    status: assumed
+
+inner_loop:
+  # Closed-loop response of the onboard (firmware) attitude controller,
+  # modelled as a first-order lag: d(phi)/dt = (phi_cmd - phi) / tau.
+  # This is what the MPC prediction model assumes about the inner loop.
+  attitude_time_constant:
+    value: 0.1
+    unit: s
+    source: placeholder
+    status: assumed
+
+sensors:
+  flow_npix:
+    # Number of pixels of the PMW3901 flow sensor along one axis, as used
+    # in the firmware flow model.
+    value: 35.0
+    unit: "-"
+    source: cf_firmware_flow
+    status: literature
+  flow_thetapix:
+    # Field of view of the flow sensor along one axis.
+    value: 0.71674
+    unit: rad
+    source: cf_firmware_flow
+    status: literature
