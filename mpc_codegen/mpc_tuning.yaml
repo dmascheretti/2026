@@ -1,0 +1,22 @@
+# MPC tuning. NOT physical parameters (those are in model/params.yaml).
+# Changing anything here requires re-running generate_solver.py, because
+# horizon, sample time, weights and bounds are baked into the solver.
+
+sample_time: 0.02          # s   (50 Hz)
+horizon_steps: 25          # -   (0.5 s look-ahead)
+
+# Diagonal state weights, order [px, py, pz, vx, vy, vz, phi, theta]
+state_weights: [40.0, 40.0, 60.0, 4.0, 4.0, 6.0, 0.5, 0.5]
+# Diagonal input weights, order [phi_cmd, theta_cmd, thrust_delta]
+# (thrust_delta is in N and much smaller than 1, so its weight is larger)
+input_weights: [4.0, 4.0, 200.0]
+
+# Input bounds
+max_tilt: 0.35             # rad (20 deg), applies to phi_cmd and theta_cmd
+min_thrust_ratio: 0.3      # -   min total thrust as a fraction of hover thrust
+max_thrust_ratio: 0.85     # -   max total thrust as a fraction of max thrust
+                           #     (headroom for the onboard attitude controller)
+
+# Yaw is not in the MPC: yaw_rate_cmd = yaw_gain * (yaw_ref - yaw)
+yaw_gain: 2.0              # 1/s
+max_yaw_rate: 1.0          # rad/s
