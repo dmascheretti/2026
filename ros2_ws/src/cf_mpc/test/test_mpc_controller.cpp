@@ -96,6 +96,36 @@ TEST_F(MpcControllerTest, SolvesFastEnoughFor50Hz) {
   EXPECT_LT(out.solve_time, 0.005);  // 5 ms budget out of 20 ms
 }
 
+// Vertical-only closed loop with a drone 10 % heavier than the model.
+// Without the observer this settles about 7 cm low; with it, at the
+// reference.
+TEST_F(MpcControllerTest, DisturbanceObserverRemovesAltitudeOffset) {
+  const double true_mass = 1.1 * params_.mass;
+  const double dt = controller_.sample_time();
+  cf_mpc::VehicleState state;
+  state.position.z() = 0.5;
+  const cf_mpc::Reference reference = hold(0.0, 0.0, 0.5);
+  cf_mpc::MpcOutput out;
+  for (int k = 0; k < 500; ++k) {  // 10 s
+    out = controller_.compute(state, reference);
+    ASSERT_TRUE(out.ok);
+    const double az = out.command.thrust / true_mass - params_.gravity;
+    state.position.z() += state.velocity.z() * dt + 0.5 * az * dt * dt;
+    state.velocity.z() += az * dt;
+  }
+  EXPECT_NEAR(state.position.z(), 0.5, 0.002);
+  // The estimated disturbance is the missing weight (negative force).
+  EXPECT_NEAR(out.disturbance, -0.1 * params_.mass * params_.gravity, 0.002);
+}
+
+TEST_F(MpcControllerTest, ObserverOffNearTheFloor) {
+  cf_mpc::VehicleState state;  // z = 0, resting: no acceleration despite low thrust
+  for (int k = 0; k < 100; ++k) {
+    const cf_mpc::MpcOutput out = controller_.compute(state, hold(0.0, 0.0, 0.0));
+    EXPECT_DOUBLE_EQ(out.disturbance, 0.0);
+  }
+}
+
 TEST_F(MpcControllerTest, WrongReferenceLengthThrows) {
   cf_mpc::VehicleState state;
   cf_mpc::Reference bad = hold(0.0, 0.0, 1.0);

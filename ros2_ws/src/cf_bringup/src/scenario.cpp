@@ -16,6 +16,15 @@ Scenario load_scenario(const std::string& yaml_path) {
   if (root["kill_time"]) {
     s.kill_time = root["kill_time"].as<double>();
   }
+  if (root["mass_factor"]) {
+    s.mass_factor = root["mass_factor"].as<double>();
+  }
+  if (root["thrust_factor"]) {
+    s.thrust_factor = root["thrust_factor"].as<double>();
+  }
+  if (root["disturbance_observer"]) {
+    s.disturbance_observer = root["disturbance_observer"].as<bool>();
+  }
   for (const YAML::Node& w : root["waypoints"]) {
     if (w.size() != 5) {
       throw std::runtime_error("scenario waypoint must be [time, x, y, z, yaw]");

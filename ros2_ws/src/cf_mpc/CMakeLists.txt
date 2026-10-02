@@ -15,6 +15,7 @@ find_package(rclcpp REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(cf_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(yaml-cpp REQUIRED)
 
@@ -48,7 +49,7 @@ target_link_libraries(cf_mpc_core
 
 add_executable(mpc_node src/mpc_node.cpp)
 target_link_libraries(mpc_node cf_mpc_core)
-ament_target_dependencies(mpc_node rclcpp nav_msgs geometry_msgs cf_msgs)
+ament_target_dependencies(mpc_node rclcpp nav_msgs geometry_msgs std_msgs cf_msgs)
 set_target_properties(mpc_node PROPERTIES BUILD_RPATH "${CF_MPC_RPATH}" INSTALL_RPATH "${CF_MPC_RPATH}")
 
 install(TARGETS mpc_node DESTINATION lib/${PROJECT_NAME})

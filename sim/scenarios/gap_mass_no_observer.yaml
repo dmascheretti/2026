@@ -1,0 +1,10 @@
+# Sim-to-real gap study: the real drone is 10 % heavier than params.yaml
+# (e.g. extra deck, tape, wrong datasheet mass). Offset-free MPC OFF (baseline).
+duration: 16.0
+initial_position: [0.0, 0.0, 0.0]
+use_ekf: true
+mass_factor: 1.1
+disturbance_observer: false
+waypoints:
+  - [0.0, 0.0, 0.0, 0.5, 0.0]
+  - [8.0, 0.0, 0.0, 0.8, 0.0]

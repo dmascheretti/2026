@@ -3,6 +3,7 @@
 // Subscribes:
 //   ekf/odom   nav_msgs/Odometry          state estimate (twist = world-frame velocity)
 //   reference  geometry_msgs/PoseStamped  position + yaw to hold
+//   safety/active std_msgs/Bool           disturbance estimate reset on arming
 // Publishes, at the MPC sample rate (50 Hz):
 //   mpc/command  cf_msgs/AttitudeCommand  goes to the safety supervisor,
 //                                         never directly to the drone
@@ -15,6 +16,7 @@
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/bool.hpp>
 
 #include "cf_model/params.hpp"
 #include "cf_mpc/mpc_controller.hpp"
@@ -40,6 +42,13 @@ class MpcNode : public rclcpp::Node {
         "ekf/odom", 10, [this](const nav_msgs::msg::Odometry& msg) { on_odom(msg); });
     reference_sub_ = create_subscription<geometry_msgs::msg::PoseStamped>(
         "reference", 10, [this](const geometry_msgs::msg::PoseStamped& msg) { on_reference(msg); });
+    active_sub_ = create_subscription<std_msgs::msg::Bool>(
+        "safety/active", 10, [this](const std_msgs::msg::Bool& msg) {
+          if (msg.data && !was_active_) {
+            controller_->reset_disturbance();  // fresh estimate for every flight
+          }
+          was_active_ = msg.data;
+        });
 
     const auto period = std::chrono::duration<double>(controller_->sample_time());
     timer_ = create_wall_timer(period, [this]() { on_timer(); });
@@ -83,6 +92,7 @@ class MpcNode : public rclcpp::Node {
     cmd.thrust_cmd = out.command.thrust_cmd;
     cmd.solver_ok = out.ok;
     cmd.solve_time = out.solve_time;
+    cmd.disturbance = out.disturbance;
     command_pub_->publish(cmd);
   }
 
@@ -90,10 +100,12 @@ class MpcNode : public rclcpp::Node {
   std::unique_ptr<cf_mpc::MpcController> controller_;
   std::optional<cf_mpc::VehicleState> state_;
   std::optional<cf_mpc::Reference> reference_;
+  bool was_active_ = false;
 
   rclcpp::Publisher<cf_msgs::msg::AttitudeCommand>::SharedPtr command_pub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr reference_sub_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr active_sub_;
   rclcpp::TimerBase::SharedPtr timer_;
 };
 

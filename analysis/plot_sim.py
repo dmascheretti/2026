@@ -93,8 +93,9 @@ def compute_metrics(d):
 
 def save(fig, name):
     FIGURE_DIR.mkdir(parents=True, exist_ok=True)
-    for ext in ("png", "pdf"):
-        fig.savefig(FIGURE_DIR / f"{name}.{ext}", dpi=150, bbox_inches="tight")
+    # No creation date in the metadata, so unchanged figures stay unchanged in git.
+    fig.savefig(FIGURE_DIR / f"{name}.png", dpi=150, bbox_inches="tight", metadata={"Software": None})
+    fig.savefig(FIGURE_DIR / f"{name}.pdf", bbox_inches="tight", metadata={"CreationDate": None})
     plt.close(fig)
 
 

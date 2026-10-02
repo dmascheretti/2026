@@ -50,8 +50,10 @@ int main(int argc, char** argv) {
   const std::string sim_file = argc > 3 ? argv[3] : CF_SIM_CONFIG;
 
   const cf_model::Params params = cf_model::load_params(CF_PARAMS_FILE);
-  const sim::SimConfig sim_config = sim::load_sim_config(sim_file);
   const cf_bringup::Scenario scenario = cf_bringup::load_scenario(scenario_file);
+  sim::SimConfig sim_config = sim::load_sim_config(sim_file);
+  if (scenario.mass_factor > 0.0) sim_config.mass_factor = scenario.mass_factor;
+  if (scenario.thrust_factor > 0.0) sim_config.thrust_factor = scenario.thrust_factor;
   const cf_ekf::EkfConfig ekf_config = cf_ekf::load_ekf_config(CF_EKF_CONFIG);
   const cf_bringup::SafetyConfig safety_config = cf_bringup::load_safety_config(CF_SAFETY_CONFIG);
 
@@ -64,6 +66,7 @@ int main(int argc, char** argv) {
   ekf.reset(x0);
 
   cf_mpc::MpcController mpc(params);
+  mpc.set_disturbance_observer(scenario.disturbance_observer);
   cf_bringup::SafetySupervisor supervisor(safety_config);
 
   if (std::abs(1.0 / sim_config.control_rate - mpc.sample_time()) > 1e-9) {

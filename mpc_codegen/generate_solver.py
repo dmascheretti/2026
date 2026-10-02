@@ -121,6 +121,9 @@ def write_constants_header(tuning, u_min, u_max):
         f"constexpr double kThrustDeltaMax = {float(u_max[2])!r};  // N",
         f"constexpr double kYawGain = {tuning['yaw_gain']!r};  // 1/s",
         f"constexpr double kMaxYawRate = {tuning['max_yaw_rate']!r};  // rad/s",
+        f"constexpr double kDisturbanceTimeConstant = {tuning['disturbance_time_constant']!r};  // s",
+        f"constexpr double kMaxDisturbanceRatio = {tuning['max_disturbance_ratio']!r};",
+        f"constexpr double kObserverMinHeight = {tuning['observer_min_height']!r};  // m",
         "}  // namespace cf_mpc_constants",
         "",
     ]

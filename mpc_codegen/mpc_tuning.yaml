@@ -25,3 +25,11 @@ max_thrust_ratio: 0.85     # -   max total thrust as a fraction of max thrust
 # Yaw is not in the MPC: yaw_rate_cmd = yaw_gain * (yaw_ref - yaw)
 yaw_gain: 2.0              # 1/s
 max_yaw_rate: 1.0          # rad/s
+
+# Offset-free control: vertical disturbance observer (see cf_mpc).
+# Estimates the unmodelled vertical force d [N] (mass / thrust-map error)
+# from  m * dvz/dt = thrust * cos(roll) * cos(pitch) - m * g + d
+# and adds -d to the thrust command.
+disturbance_time_constant: 0.5   # s   low-pass of the force estimate
+max_disturbance_ratio: 0.3       # -   |d| <= ratio * hover thrust
+observer_min_height: 0.15        # m   off near the floor (ground reaction)

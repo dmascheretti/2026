@@ -21,6 +21,10 @@ struct Scenario {
   Eigen::Vector3d initial_position = Eigen::Vector3d::Zero();  // m
   bool use_ekf = true;       // simulator only: false = controller gets the true state
   double kill_time = -1.0;   // simulator only: s, < 0 = never
+  // Simulator only, for the sim-to-real gap study:
+  double mass_factor = -1.0;     // overrides sim.yaml if > 0
+  double thrust_factor = -1.0;   // overrides sim.yaml if > 0
+  bool disturbance_observer = true;
   std::vector<Waypoint> waypoints;
 };
 

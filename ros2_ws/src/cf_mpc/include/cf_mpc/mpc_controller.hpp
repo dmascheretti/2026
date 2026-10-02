@@ -47,6 +47,7 @@ struct AttitudeCommand {
 
 struct MpcOutput {
   AttitudeCommand command;
+  double disturbance = 0.0;   // N, estimated unmodelled vertical force
   bool ok = false;            // false if the QP solver failed
   int solver_status = 0;      // acados status code
   double solve_time = 0.0;    // s
@@ -80,11 +81,28 @@ class MpcController {
   int horizon_steps() const { return mpc_.horizon_steps(); }
   double sample_time() const { return mpc_.sample_time(); }
 
+  // Call once per sample period (the observer assumes sample_time() between calls).
   MpcOutput compute(const VehicleState& state, const Reference& reference);
 
+  // Forget the disturbance estimate (e.g. after landing or re-arming).
+  void reset_disturbance();
+
+  // On by default. Off only to show what it fixes (gap study scenarios).
+  void set_disturbance_observer(bool enabled) { observer_enabled_ = enabled; }
+
  private:
+  void update_disturbance(const VehicleState& state);
+
   cf_model::Params params_;
   AcadosMpc mpc_;
+
+  // Vertical disturbance observer.
+  bool observer_enabled_ = true;
+  double disturbance_ = 0.0;           // N
+  bool have_previous_ = false;
+  double previous_vz_ = 0.0;           // m/s
+  double previous_thrust_ = 0.0;       // N, total thrust commanded last step
+  double previous_tilt_cos_ = 1.0;     // cos(roll) * cos(pitch) last step
 };
 
 // Reference that holds one position for the whole horizon.

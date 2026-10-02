@@ -90,6 +90,7 @@ MpcOutput MpcController::compute(const VehicleState& state, const Reference& ref
     throw std::invalid_argument("MPC reference must have horizon_steps + 1 points");
   }
   const double yaw = state.yaw;
+  update_disturbance(state);
 
   // Current state in the yaw frame.
   Eigen::Matrix<double, kNx, 1> x0;
@@ -116,7 +117,10 @@ MpcOutput MpcController::compute(const VehicleState& state, const Reference& ref
   if (output.ok) {
     cmd.roll = u0(0);
     cmd.pitch = u0(1);
-    cmd.thrust = hover_thrust + u0(2);
+    // Cancel the estimated disturbance, stay inside the MPC thrust bounds.
+    cmd.thrust = std::clamp(hover_thrust + u0(2) - disturbance_,
+                            hover_thrust + cf_mpc_constants::kThrustDeltaMin,
+                            hover_thrust + cf_mpc_constants::kThrustDeltaMax);
   } else {
     // Solver failed: level attitude, hover thrust. The safety supervisor
     // decides what happens next.
@@ -132,7 +136,39 @@ MpcOutput MpcController::compute(const VehicleState& state, const Reference& ref
                             cf_mpc_constants::kMaxYawRate);
 
   cmd.thrust_cmd = cf_model::cmd_from_thrust_per_motor(params_, cmd.thrust / 4.0);
+  output.disturbance = disturbance_;
+
+  previous_thrust_ = cmd.thrust;
+  previous_tilt_cos_ = std::cos(state.roll) * std::cos(state.pitch);
+  previous_vz_ = state.velocity.z();
+  have_previous_ = true;
   return output;
+}
+
+void MpcController::reset_disturbance() {
+  disturbance_ = 0.0;
+  have_previous_ = false;
+}
+
+void MpcController::update_disturbance(const VehicleState& state) {
+  // Off near the floor: there the ground pushes back and would be
+  // mistaken for a disturbance.
+  if (!observer_enabled_ || !have_previous_ ||
+      state.position.z() < cf_mpc_constants::kObserverMinHeight) {
+    return;
+  }
+  const double dt = cf_mpc_constants::kSampleTime;
+  const double m = params_.mass;
+  // Vertical force needed to explain the measured change of vz ...
+  const double measured_force = m * (state.velocity.z() - previous_vz_) / dt;
+  // ... minus the force our model predicts from the thrust we sent.
+  const double model_force = previous_thrust_ * previous_tilt_cos_ - m * params_.gravity;
+  const double raw_disturbance = measured_force - model_force;
+  // First-order low-pass: the raw value is very noisy (it differentiates vz).
+  const double alpha = dt / cf_mpc_constants::kDisturbanceTimeConstant;
+  disturbance_ += alpha * (raw_disturbance - disturbance_);
+  const double limit = cf_mpc_constants::kMaxDisturbanceRatio * m * params_.gravity;
+  disturbance_ = std::clamp(disturbance_, -limit, limit);
 }
 
 // ------------------------------------------------------------------ helpers
