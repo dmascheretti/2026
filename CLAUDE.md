@@ -27,11 +27,14 @@ The final result must show: same control design, simulation → hardware, a quan
 /model        dynamics, parameters, linearization (Python + C++ header)
 /mpc_codegen  acados OCP definition (Python) → generated C code
 /ros2_ws/src
+  /cf_msgs    AttitudeCommand message (MPC -> supervisor)
   /cf_mpc     C++ MPC node
   /cf_ekf     C++ EKF node
-  /cf_bringup launch files, params YAML, safety supervisor
-/sim          simulation scenarios + scripts
+  /cf_bringup launch files, params YAML, safety supervisor, kill switch,
+              mission node, sim bridge
+/sim          C++ closed-loop simulator, simulation scenarios
 /analysis     log parsing, plots, metrics
+/scripts      setup, build and run scripts
 /docs         design notes, results, figures
 ```
 
