@@ -105,3 +105,35 @@ target_compile_definitions(closed_loop_sim PRIVATE
   CF_EKF_CONFIG="${CMAKE_SOURCE_DIR}/ros2_ws/src/cf_ekf/config/ekf.yaml"
   CF_SAFETY_CONFIG="${CMAKE_SOURCE_DIR}/ros2_ws/src/cf_bringup/config/safety.yaml")
 target_link_libraries(closed_loop_sim cf_mpc_core cf_ekf_core cf_safety_core)
+
+# ---- interactive simulator ("game"), optional ----
+#   cmake -S . -B build -DCF_BUILD_GAME=ON
+# Needs raylib (graphics/window/input). It is downloaded at configure time
+# (pinned version) because Ubuntu does not package it.
+option(CF_BUILD_GAME "Build the interactive 3D simulator (downloads raylib)" OFF)
+if(CF_BUILD_GAME)
+  include(FetchContent)
+  set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
+  FetchContent_Declare(raylib
+    GIT_REPOSITORY https://github.com/raysan5/raylib.git
+    GIT_TAG 5.5
+    GIT_SHALLOW TRUE)
+  FetchContent_MakeAvailable(raylib)
+  # raylib's own sources do not pass our warning flags.
+  target_compile_options(raylib PRIVATE -w)
+
+  add_executable(cf_sim_game
+    sim/game/game.cpp
+    sim/game/draw.cpp
+    sim/src/simulation.cpp
+    sim/src/plant.cpp)
+  target_include_directories(cf_sim_game PRIVATE sim/src sim/game)
+  target_compile_definitions(cf_sim_game PRIVATE
+    CF_PARAMS_FILE="${CF_PARAMS_FILE}"
+    CF_SIM_CONFIG="${CMAKE_SOURCE_DIR}/sim/config/sim.yaml"
+    CF_EKF_CONFIG="${CMAKE_SOURCE_DIR}/ros2_ws/src/cf_ekf/config/ekf.yaml"
+    CF_SAFETY_CONFIG="${CMAKE_SOURCE_DIR}/ros2_ws/src/cf_bringup/config/safety.yaml"
+    CF_MISSION_FILE="${CMAKE_SOURCE_DIR}/sim/scenarios/steps.yaml")
+  target_link_libraries(cf_sim_game cf_mpc_core cf_ekf_core cf_safety_core raylib)
+endif()

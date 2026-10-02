@@ -15,6 +15,8 @@ ACADOS_COMMIT=6cbbf9986ae0e8b9032ae4f9994eda8d2c269029
 echo "== C++ libraries (Eigen, GoogleTest, yaml-cpp) and build tools"
 sudo apt-get update
 sudo apt-get install -y build-essential cmake git libeigen3-dev libgtest-dev libyaml-cpp-dev
+# Only for the interactive simulator (raylib needs X11 + OpenGL headers).
+sudo apt-get install -y libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev
 
 echo "== Python packages"
 python3 -m pip install --user numpy scipy matplotlib casadi pyyaml

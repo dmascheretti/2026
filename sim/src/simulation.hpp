@@ -54,6 +54,9 @@ class Simulation {
   void arm();
   // Like the kill key: latched stop at the next control step.
   void kill() { kill_ = true; }
+  // After a normal landing: stop forwarding, motors off (not an emergency).
+  void disarm() { armed_ = false; }
+  bool armed() const { return armed_; }
   // Like the ROS ekf/reset service: estimate := true pose (drone on the floor).
   void reset_estimator();
 
