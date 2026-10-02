@@ -1,0 +1,8 @@
+# Reference outside the geofence: the drone flies towards it and the
+# supervisor cuts the motors when the estimate leaves the box.
+duration: 6.0
+initial_position: [0.0, 0.0, 0.0]
+use_ekf: true
+waypoints:
+  - [0.0, 0.0, 0.0, 0.5, 0.0]
+  - [3.0, 2.0, 0.0, 0.5, 0.0]

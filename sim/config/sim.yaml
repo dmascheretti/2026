@@ -1,0 +1,32 @@
+# Simulator settings: the "real world" the controller and EKF are tested
+# against. Physical parameters come from model/params.yaml; this file only
+# holds what is specific to the simulation.
+
+physics_rate: 1000.0          # Hz   rigid-body integration rate
+imu_rate: 500.0               # Hz
+flow_rate: 100.0              # Hz
+range_rate: 40.0              # Hz
+control_rate: 50.0            # Hz   MPC + supervisor rate (must match the solver)
+command_latency: 0.010        # s    radio latency laptop -> drone
+
+# Stand-in for the firmware attitude controller (cascaded P on angle and
+# body rate). NOT the real firmware gains: chosen so the attitude response
+# is close to the first-order lag the MPC assumes. The real firmware loop
+# is identified in the hardware phase.
+attitude_gain: 10.0           # 1/s  angle error -> rate setpoint
+rate_gain: 30.0               # 1/s  rate error  -> angular acceleration
+
+# Sensor noise (standard deviations) and biases of the simulated sensors.
+gyro_noise: 0.002             # rad/s
+gyro_bias: [0.0, 0.0, 0.0]    # rad/s
+accel_noise: 0.05             # m/s^2
+accel_bias: [0.0, 0.0, 0.0]   # m/s^2
+range_noise: 0.005            # m
+flow_noise: 0.3               # pixels
+
+# Model mismatch: the simulated drone differs from params.yaml by these
+# factors (1.0 = identical). Used to study the sim-to-real gap.
+mass_factor: 1.0
+thrust_factor: 1.0
+
+random_seed: 1

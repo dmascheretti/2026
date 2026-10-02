@@ -91,3 +91,12 @@ target_compile_definitions(test_cf_safety PRIVATE
   CF_SAFETY_CONFIG="${CMAKE_SOURCE_DIR}/ros2_ws/src/cf_bringup/config/safety.yaml")
 target_link_libraries(test_cf_safety cf_safety_core GTest::gtest_main)
 add_test(NAME test_cf_safety COMMAND test_cf_safety)
+
+# ---- closed-loop simulator ----
+add_executable(closed_loop_sim sim/src/closed_loop_sim.cpp sim/src/plant.cpp)
+target_compile_definitions(closed_loop_sim PRIVATE
+  CF_PARAMS_FILE="${CF_PARAMS_FILE}"
+  CF_SIM_CONFIG="${CMAKE_SOURCE_DIR}/sim/config/sim.yaml"
+  CF_EKF_CONFIG="${CMAKE_SOURCE_DIR}/ros2_ws/src/cf_ekf/config/ekf.yaml"
+  CF_SAFETY_CONFIG="${CMAKE_SOURCE_DIR}/ros2_ws/src/cf_bringup/config/safety.yaml")
+target_link_libraries(closed_loop_sim cf_mpc_core cf_ekf_core cf_safety_core)

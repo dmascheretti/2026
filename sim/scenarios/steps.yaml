@@ -1,0 +1,10 @@
+# Position steps in x, y, z and yaw at 0.5 m height.
+duration: 16.0
+initial_position: [0.0, 0.0, 0.0]
+use_ekf: true
+waypoints:
+  - [0.0, 0.0, 0.0, 0.5, 0.0]
+  - [4.0, 0.5, 0.0, 0.5, 0.0]
+  - [7.0, 0.5, 0.5, 0.5, 0.0]
+  - [10.0, 0.5, 0.5, 0.8, 1.0]
+  - [13.0, 0.0, 0.0, 0.5, 0.0]

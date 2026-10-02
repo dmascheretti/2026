@@ -20,3 +20,6 @@ __pycache__/
 
 # Top-level CMake build
 build/
+
+# Simulation output
+sim/output/

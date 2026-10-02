@@ -1,0 +1,6 @@
+# Take off from the ground and hold 0.5 m.
+duration: 8.0                       # s
+initial_position: [0.0, 0.0, 0.0]   # m
+use_ekf: true                       # false: controller gets the true state
+waypoints:                          # [time s, x m, y m, z m, yaw rad]
+  - [0.0, 0.0, 0.0, 0.5, 0.0]

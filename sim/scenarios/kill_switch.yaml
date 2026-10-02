@@ -1,0 +1,7 @@
+# Hover, then the operator presses the kill key at t = 4 s.
+duration: 6.0
+initial_position: [0.0, 0.0, 0.0]
+use_ekf: true
+kill_time: 4.0                      # s
+waypoints:
+  - [0.0, 0.0, 0.0, 0.5, 0.0]
