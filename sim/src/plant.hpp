@@ -58,6 +58,11 @@ class Quadrotor {
   void set_position(const Eigen::Vector3d& position);
   void set_setpoint(const Setpoint& setpoint) { setpoint_ = setpoint; }
 
+  // Disturbances for experiments and the game: an external force on the
+  // body (wind gust, push) and a different true mass (extra payload).
+  void set_external_force(const Eigen::Vector3d& force_world) { external_force_ = force_world; }
+  void set_mass_factor(double factor) { true_mass_ = params_.mass * factor; }
+
   // Advances the simulation by dt (inner controller + motors + rigid body).
   void step(double dt);
 
@@ -81,6 +86,7 @@ class Quadrotor {
   Setpoint setpoint_;
   TrueState state_;
   Eigen::Vector3d last_specific_force_body_ = Eigen::Vector3d::Zero();
+  Eigen::Vector3d external_force_ = Eigen::Vector3d::Zero();  // N, world
   std::mt19937 rng_;
   std::normal_distribution<double> unit_normal_{0.0, 1.0};
 };

@@ -117,6 +117,7 @@ void Quadrotor::step(double dt) {
   // Translational dynamics.
   const Eigen::Vector3d gravity(0.0, 0.0, -params_.gravity);
   Eigen::Vector3d accel = R * Eigen::Vector3d(0.0, 0.0, thrust / true_mass_) + gravity;
+  accel += external_force_ / true_mass_;
 
   // Ground contact: the floor pushes back while the drone rests on it.
   if (state_.on_ground && accel.z() <= 0.0) {
@@ -126,7 +127,9 @@ void Quadrotor::step(double dt) {
     return;
   }
   state_.on_ground = false;
-  last_specific_force_body_ = Eigen::Vector3d(0.0, 0.0, thrust / true_mass_);
+  // Accelerometer: thrust plus external (non-gravity) forces, body frame.
+  last_specific_force_body_ = Eigen::Vector3d(0.0, 0.0, thrust / true_mass_) +
+                              R.transpose() * external_force_ / true_mass_;
 
   state_.position += state_.velocity * dt + 0.5 * accel * dt * dt;
   state_.velocity += accel * dt;
