@@ -21,6 +21,7 @@ Next is hardware, following [`docs/hardware_checklist.md`](docs/hardware_checkli
 | [`docs/results_sim.md`](docs/results_sim.md) | simulation metrics, figures, sim-to-real gap study |
 | [`docs/hardware_checklist.md`](docs/hardware_checklist.md) | step-by-step plan for the first flights |
 | [`docs/identification.md`](docs/identification.md) | how to measure the parameters still marked `assumed` |
+| [`docs/game.md`](docs/game.md) | the interactive 3D simulator ("videogame"): keys, what you see, things to try |
 
 ![steps scenario](docs/figures/sim_steps_position.png)
 
@@ -34,7 +35,7 @@ ros2_ws/src/
   cf_mpc/        MPC library + mpc_node
   cf_ekf/        EKF library + ekf_node
   cf_bringup/    safety supervisor, kill switch, mission, sim bridge, launch, config
-sim/             C++ closed-loop simulator, sim.yaml, scenarios/
+sim/             C++ closed-loop simulator, sim.yaml, scenarios/, game/ (interactive 3D simulator)
 analysis/        plots and metrics (plot_sim.py, plot_gap.py), ROS recorder
 scripts/         setup and run scripts
 docs/            design notes, results, figures
@@ -60,6 +61,23 @@ Single scenario:
 ./build/closed_loop_sim sim/scenarios/steps.yaml sim/output/steps.csv
 python3 analysis/plot_sim.py sim/output/steps.csv        # -> docs/figures/
 ```
+
+## Interactive simulator ("videogame")
+
+Fly the simulated Crazyflie from the keyboard in a 3D window. Everything
+is simulated (no hardware, no ROS), and the drone, sensors, EKF, MPC and
+safety supervisor are the same code as above. You move the target, the
+MPC flies there. You can add wind gusts and payload, toggle the EKF and
+the disturbance observer, hit the kill switch, or race through rings.
+
+```bash
+./scripts/run_game.sh       # builds with -DCF_BUILD_GAME=ON (downloads raylib 5.5) and starts
+```
+
+ENTER = take off, W A S D / R F / Q E = move the target, SPACE = kill
+switch, H = all keys. Full description: [`docs/game.md`](docs/game.md).
+
+![game](docs/figures/game_gust.png)
 
 ## ROS 2 (Jazzy)
 
@@ -100,6 +118,7 @@ ros2 service call /cf231/safety/arm std_srvs/srv/Trigger         # take-off
 | acados (pinned commit in `scripts/setup_ubuntu.sh`) | MPC code generation + QP solver (HPIPM) |
 | numpy, scipy, casadi, pyyaml, matplotlib | code generation, linearisation check, plots |
 | ROS 2 Jazzy, Crazyswarm2 | runtime and radio link |
+| raylib 5.5 (only with `CF_BUILD_GAME=ON`, downloaded by CMake) | window, 3D drawing and keyboard for the interactive simulator |
 
 ## Development environment used
 

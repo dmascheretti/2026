@@ -32,7 +32,7 @@ The final result must show: same control design, simulation → hardware, a quan
   /cf_ekf     C++ EKF node
   /cf_bringup launch files, params YAML, safety supervisor, kill switch,
               mission node, sim bridge
-/sim          C++ closed-loop simulator, simulation scenarios
+/sim          C++ closed-loop simulator, simulation scenarios, game/ (interactive 3D simulator)
 /analysis     log parsing, plots, metrics
 /scripts      setup, build and run scripts
 /docs         design notes, results, figures
