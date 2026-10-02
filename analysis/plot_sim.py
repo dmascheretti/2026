@@ -146,8 +146,8 @@ def plot_attitude(d, name):
 
 def plot_thrust(d, name):
     fig, ax = plt.subplots(figsize=(8, 2.8))
-    ax.plot(d["t"], d["cmd_thrust_pwm"] / 1000.0, color=COLOR_CMD)
-    ax.set_ylabel("thrust cmd [PWM / 1000]")
+    ax.plot(d["t"], d["cmd_thrust_cmd"] / 1000.0, color=COLOR_CMD)
+    ax.set_ylabel("thrust cmd [1/1000]")
     ax.set_xlabel("time [s]")
     ax.set_title(f"Thrust command (per motor) - {name}", loc="left")
     mark_stop(ax, d)

@@ -39,7 +39,7 @@ struct Setpoint {
   double roll = 0.0;        // rad
   double pitch = 0.0;       // rad
   double yaw_rate = 0.0;    // rad/s
-  double thrust_pwm = 0.0;  // per motor, 0 = motors off
+  double thrust_cmd = 0.0;  // per motor, 0 = motors off
 };
 
 struct TrueState {

@@ -134,7 +134,7 @@ int main(int argc, char** argv) {
   csv << "t,true_px,true_py,true_pz,true_vx,true_vy,true_vz,true_roll,true_pitch,true_yaw,"
          "est_px,est_py,est_pz,est_vx,est_vy,est_vz,est_roll,est_pitch,est_yaw,"
          "ref_px,ref_py,ref_pz,ref_yaw,"
-         "cmd_roll,cmd_pitch,cmd_yaw_rate,cmd_thrust_pwm,"
+         "cmd_roll,cmd_pitch,cmd_yaw_rate,cmd_thrust_cmd,"
          "stopped,solver_ok,solve_time\n";
 
   std::deque<PendingSetpoint> radio;
@@ -206,7 +206,7 @@ int main(int argc, char** argv) {
       sup_in.command.roll = mpc_out.command.roll;
       sup_in.command.pitch = mpc_out.command.pitch;
       sup_in.command.yaw_rate = mpc_out.command.yaw_rate;
-      sup_in.command.thrust_pwm = mpc_out.command.thrust_pwm;
+      sup_in.command.thrust_cmd = mpc_out.command.thrust_cmd;
       sup_in.command_stamp = t;
       sup_in.solver_ok = mpc_out.ok;
       sup_in.kill_switch = scenario.kill_time >= 0.0 && t >= scenario.kill_time;
@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
       pending.setpoint.roll = sup_out.command.roll;
       pending.setpoint.pitch = sup_out.command.pitch;
       pending.setpoint.yaw_rate = sup_out.command.yaw_rate;
-      pending.setpoint.thrust_pwm = sup_out.command.thrust_pwm;
+      pending.setpoint.thrust_cmd = sup_out.command.thrust_cmd;
       radio.push_back(pending);
 
       csv << t << ','
@@ -234,7 +234,7 @@ int main(int argc, char** argv) {
           << current_wp.position.x() << ',' << current_wp.position.y() << ','
           << current_wp.position.z() << ',' << current_wp.yaw << ','
           << sup_out.command.roll << ',' << sup_out.command.pitch << ','
-          << sup_out.command.yaw_rate << ',' << sup_out.command.thrust_pwm << ','
+          << sup_out.command.yaw_rate << ',' << sup_out.command.thrust_cmd << ','
           << (sup_out.mode == cf_bringup::Mode::kStopped ? 1 : 0) << ','
           << (mpc_out.ok ? 1 : 0) << ',' << mpc_out.solve_time << '\n';
     }

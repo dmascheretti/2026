@@ -19,18 +19,32 @@ TEST(Params, MissingFileThrows) {
   EXPECT_ANY_THROW(cf_model::load_params("does_not_exist.yaml"));
 }
 
-TEST(Params, PwmThrustRoundTrip) {
-  const cf_model::Params p = cf_model::load_params(kParamsFile);
-  for (double pwm = 1000.0; pwm <= p.pwm_max; pwm += 5000.0) {
-    const double thrust = cf_model::thrust_per_motor_from_pwm(p, pwm);
-    EXPECT_NEAR(cf_model::pwm_from_thrust_per_motor(p, thrust), pwm, 1e-6);
+TEST(Params, BatteryCompensatedThrustIsLinear) {
+  cf_model::Params p = cf_model::load_params(kParamsFile);
+  p.thrust_command_model = cf_model::ThrustCommandModel::kBatteryCompensated;
+  EXPECT_NEAR(cf_model::thrust_per_motor_from_cmd(p, p.thrust_cmd_max), p.max_thrust_per_motor, 1e-12);
+  EXPECT_NEAR(cf_model::thrust_per_motor_from_cmd(p, p.thrust_cmd_max / 2.0),
+              p.max_thrust_per_motor / 2.0, 1e-12);
+  // Below THRUST_MIN the firmware switches the motor off.
+  EXPECT_DOUBLE_EQ(cf_model::thrust_per_motor_from_cmd(p, 1000.0), 0.0);
+}
+
+TEST(Params, ThrustCommandRoundTripBothModels) {
+  cf_model::Params p = cf_model::load_params(kParamsFile);
+  for (auto model : {cf_model::ThrustCommandModel::kBatteryCompensated,
+                     cf_model::ThrustCommandModel::kPwmPolynomial}) {
+    p.thrust_command_model = model;
+    for (double cmd = 10000.0; cmd <= p.thrust_cmd_max; cmd += 5000.0) {
+      const double thrust = cf_model::thrust_per_motor_from_cmd(p, cmd);
+      EXPECT_NEAR(cf_model::cmd_from_thrust_per_motor(p, thrust), cmd, 1e-6);
+    }
   }
 }
 
-TEST(Params, PwmIsClamped) {
+TEST(Params, ThrustCommandIsClamped) {
   const cf_model::Params p = cf_model::load_params(kParamsFile);
-  EXPECT_DOUBLE_EQ(cf_model::pwm_from_thrust_per_motor(p, 100.0), p.pwm_max);
-  EXPECT_DOUBLE_EQ(cf_model::pwm_from_thrust_per_motor(p, -1.0), 0.0);
+  EXPECT_DOUBLE_EQ(cf_model::cmd_from_thrust_per_motor(p, 100.0), p.thrust_cmd_max);
+  EXPECT_DOUBLE_EQ(cf_model::cmd_from_thrust_per_motor(p, -1.0), 0.0);
 }
 
 TEST(Params, HoverNeedsLessThanMaxThrust) {

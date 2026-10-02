@@ -25,6 +25,7 @@ sources:
   foerster2015: "J. Foerster, System Identification of the Crazyflie 2.0 Nano Quadrocopter, BSc thesis, ETH Zurich, 2015"
   standard: "Standard physical constant"
   cf_firmware: "Crazyflie firmware: motor command is a uint16 (github.com/bitcraze/crazyflie-firmware)"
+  cf_firmware_thrust: "Crazyflie firmware, src/platform/interface/platform_defaults_cf2.h and src/drivers/src/motors.c (commit 2248ed2, 2026-10-02)"
   cf_firmware_flow: "Crazyflie firmware, optical flow measurement model (src/modules/src/kalman_core/mm_flow.c)"
   placeholder: "Placeholder guess, no source yet. To be identified (see docs/identification.md)"
 
@@ -76,20 +77,42 @@ rotor:
     unit: N*m/rpm^2
     source: foerster2015
     status: literature
-  thrust_pwm_poly:
-    # Thrust per motor as a function of the 16-bit motor command (0..65535):
-    #   F = c2 * pwm^2 + c1 * pwm + c0
-    # Listed as [c2, c1, c0]. Needed to map MPC thrust (N) to the
-    # cflib thrust setpoint. Verify on our motors/battery in identification.
-    value: [2.130295e-11, 1.032633e-6, 5.484560e-4]
-    unit: N
-    source: foerster2015
+  thrust_command_model:
+    # How the firmware turns the 16-bit thrust command (0..65535) into thrust.
+    #   battery_compensated: F = cmd / thrust_cmd_max * max_thrust_per_motor
+    #                        (firmware default for Crazyflie 2.x since 2025,
+    #                        CONFIG_ENABLE_THRUST_BAT_COMPENSATED=y)
+    #   pwm_polynomial:      F = c2*cmd^2 + c1*cmd + c0 (thrust_pwm_poly),
+    #                        older firmware / compensation disabled.
+    # Check which one your firmware uses before flying.
+    value: battery_compensated
+    unit: "-"
+    source: cf_firmware_thrust
     status: literature
-  pwm_max:
+  thrust_cmd_max:
     value: 65535
     unit: "-"
     source: cf_firmware
     status: datasheet
+  max_thrust_per_motor:
+    # THRUST_MAX for "2.1+" and "legacy" propellers (same value).
+    value: 0.12
+    unit: N
+    source: cf_firmware_thrust
+    status: literature
+  min_thrust_per_motor:
+    # THRUST_MIN: commands below this thrust switch the motor off.
+    value: 0.012817578393224994
+    unit: N
+    source: cf_firmware_thrust
+    status: literature
+  thrust_pwm_poly:
+    # Only used with thrust_command_model = pwm_polynomial.
+    # F = c2 * cmd^2 + c1 * cmd + c0 per motor, listed as [c2, c1, c0].
+    value: [2.130295e-11, 1.032633e-6, 5.484560e-4]
+    unit: N
+    source: foerster2015
+    status: literature
   motor_time_constant:
     # First-order lag between commanded and actual rotor thrust.
     # Used only by the simulator plant, not by the MPC.

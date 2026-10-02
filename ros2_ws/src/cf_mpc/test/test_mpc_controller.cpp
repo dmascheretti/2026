@@ -44,8 +44,8 @@ TEST_F(MpcControllerTest, AtReferenceGivesHover) {
   EXPECT_NEAR(out.command.pitch, 0.0, 1e-8);
   EXPECT_NEAR(out.command.yaw_rate, 0.0, 1e-12);
   EXPECT_NEAR(out.command.thrust, params_.mass * params_.gravity, 1e-8);
-  EXPECT_GT(out.command.thrust_pwm, 0.0);
-  EXPECT_LT(out.command.thrust_pwm, params_.pwm_max);
+  EXPECT_GT(out.command.thrust_cmd, 0.0);
+  EXPECT_LT(out.command.thrust_cmd, params_.thrust_cmd_max);
 }
 
 TEST_F(MpcControllerTest, TargetAheadPitchesForward) {

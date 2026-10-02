@@ -46,11 +46,21 @@ def load_params(path=PARAMS_FILE):
     return params
 
 
+def thrust_per_motor_from_cmd(params, cmd):
+    """Thrust of one motor [N] for a firmware thrust command (0..65535)."""
+    model = params["thrust_command_model"]
+    if model == "battery_compensated":
+        thrust = cmd / params["thrust_cmd_max"] * params["max_thrust_per_motor"]
+        return thrust if thrust >= params["min_thrust_per_motor"] else 0.0
+    if model == "pwm_polynomial":
+        c2, c1, c0 = params["thrust_pwm_poly"]
+        return c2 * cmd**2 + c1 * cmd + c0
+    raise ValueError("unknown thrust_command_model: " + str(model))
+
+
 def max_total_thrust(params):
     """Total thrust of 4 motors at full command [N]."""
-    c2, c1, c0 = params["thrust_pwm_poly"]
-    pwm = params["pwm_max"]
-    return 4.0 * (c2 * pwm**2 + c1 * pwm + c0)
+    return 4.0 * thrust_per_motor_from_cmd(params, params["thrust_cmd_max"])
 
 
 def nonlinear_dynamics_casadi(params):

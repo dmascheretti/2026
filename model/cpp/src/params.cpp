@@ -47,6 +47,17 @@ Params load_params(const std::string& yaml_path) {
 
   p.thrust_coefficient = get_double(root, "rotor", "thrust_coefficient");
   p.torque_coefficient = get_double(root, "rotor", "torque_coefficient");
+  const std::string thrust_model = get_value(root, "rotor", "thrust_command_model").as<std::string>();
+  if (thrust_model == "battery_compensated") {
+    p.thrust_command_model = ThrustCommandModel::kBatteryCompensated;
+  } else if (thrust_model == "pwm_polynomial") {
+    p.thrust_command_model = ThrustCommandModel::kPwmPolynomial;
+  } else {
+    throw std::runtime_error("params.yaml: unknown rotor.thrust_command_model " + thrust_model);
+  }
+  p.thrust_cmd_max = get_double(root, "rotor", "thrust_cmd_max");
+  p.max_thrust_per_motor = get_double(root, "rotor", "max_thrust_per_motor");
+  p.min_thrust_per_motor = get_double(root, "rotor", "min_thrust_per_motor");
   const YAML::Node poly = get_value(root, "rotor", "thrust_pwm_poly");
   if (poly.size() != 3) {
     throw std::runtime_error("params.yaml: rotor.thrust_pwm_poly must have 3 entries");
@@ -54,7 +65,6 @@ Params load_params(const std::string& yaml_path) {
   p.thrust_pwm_c2 = poly[0].as<double>();
   p.thrust_pwm_c1 = poly[1].as<double>();
   p.thrust_pwm_c0 = poly[2].as<double>();
-  p.pwm_max = get_double(root, "rotor", "pwm_max");
   p.motor_time_constant = get_double(root, "rotor", "motor_time_constant");
   p.attitude_time_constant = get_double(root, "inner_loop", "attitude_time_constant");
   p.flow_npix = get_double(root, "sensors", "flow_npix");
@@ -62,25 +72,35 @@ Params load_params(const std::string& yaml_path) {
   return p;
 }
 
-double thrust_per_motor_from_pwm(const Params& p, double pwm) {
-  return p.thrust_pwm_c2 * pwm * pwm + p.thrust_pwm_c1 * pwm + p.thrust_pwm_c0;
+double thrust_per_motor_from_cmd(const Params& p, double cmd) {
+  if (p.thrust_command_model == ThrustCommandModel::kBatteryCompensated) {
+    // Firmware motors.c: thrust = cmd / 65535 * THRUST_MAX, off below THRUST_MIN.
+    const double thrust = cmd / p.thrust_cmd_max * p.max_thrust_per_motor;
+    return thrust >= p.min_thrust_per_motor ? thrust : 0.0;
+  }
+  return p.thrust_pwm_c2 * cmd * cmd + p.thrust_pwm_c1 * cmd + p.thrust_pwm_c0;
 }
 
-double pwm_from_thrust_per_motor(const Params& p, double thrust) {
-  // Solve c2*pwm^2 + c1*pwm + (c0 - thrust) = 0 and take the positive root.
-  const double a = p.thrust_pwm_c2;
-  const double b = p.thrust_pwm_c1;
-  const double c = p.thrust_pwm_c0 - thrust;
-  const double discriminant = b * b - 4.0 * a * c;
-  if (discriminant < 0.0) {
-    return 0.0;
+double cmd_from_thrust_per_motor(const Params& p, double thrust) {
+  double cmd = 0.0;
+  if (p.thrust_command_model == ThrustCommandModel::kBatteryCompensated) {
+    cmd = thrust / p.max_thrust_per_motor * p.thrust_cmd_max;
+  } else {
+    // Solve c2*cmd^2 + c1*cmd + (c0 - thrust) = 0, positive root.
+    const double a = p.thrust_pwm_c2;
+    const double b = p.thrust_pwm_c1;
+    const double c = p.thrust_pwm_c0 - thrust;
+    const double discriminant = b * b - 4.0 * a * c;
+    if (discriminant < 0.0) {
+      return 0.0;
+    }
+    cmd = (-b + std::sqrt(discriminant)) / (2.0 * a);
   }
-  const double pwm = (-b + std::sqrt(discriminant)) / (2.0 * a);
-  return std::clamp(pwm, 0.0, p.pwm_max);
+  return std::clamp(cmd, 0.0, p.thrust_cmd_max);
 }
 
 double max_total_thrust(const Params& p) {
-  return 4.0 * thrust_per_motor_from_pwm(p, p.pwm_max);
+  return 4.0 * thrust_per_motor_from_cmd(p, p.thrust_cmd_max);
 }
 
 Eigen::Matrix3d rotation_zyx(double phi, double theta, double psi) {

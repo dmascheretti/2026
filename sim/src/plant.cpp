@@ -60,7 +60,7 @@ Eigen::Vector3d euler_zyx(const Eigen::Matrix3d& R) {
 Quadrotor::Quadrotor(const cf_model::Params& params, const SimConfig& config)
     : params_(params), config_(config), rng_(config.random_seed) {
   true_mass_ = params_.mass * config_.mass_factor;
-  max_motor_thrust_ = config_.thrust_factor * cf_model::thrust_per_motor_from_pwm(params_, params_.pwm_max);
+  max_motor_thrust_ = config_.thrust_factor * cf_model::thrust_per_motor_from_cmd(params_, params_.thrust_cmd_max);
 
   // X configuration. Motor i at body position (x_i, y_i), spin direction s_i.
   // Order: front-right, back-right, back-left, front-left.
@@ -85,7 +85,7 @@ void Quadrotor::set_position(const Eigen::Vector3d& position) {
 
 Eigen::Vector4d Quadrotor::inner_controller() const {
   // Firmware behaviour: zero thrust setpoint means motors off.
-  if (setpoint_.thrust_pwm <= 0.0) {
+  if (setpoint_.thrust_cmd <= 0.0) {
     return Eigen::Vector4d::Zero();
   }
   const Eigen::Vector3d euler = euler_zyx(state_.attitude.toRotationMatrix());
@@ -99,9 +99,9 @@ Eigen::Vector4d Quadrotor::inner_controller() const {
       config_.rate_gain * (rate_setpoint - state_.body_rate);
   const Eigen::Vector3d torque = params_.inertia * angular_acceleration;
 
-  // Base thrust from the PWM command (firmware: same base for all motors).
+  // Base thrust from the thrust command (firmware: same base for all motors).
   const double total_thrust =
-      4.0 * config_.thrust_factor * cf_model::thrust_per_motor_from_pwm(params_, setpoint_.thrust_pwm);
+      4.0 * config_.thrust_factor * cf_model::thrust_per_motor_from_cmd(params_, setpoint_.thrust_cmd);
 
   Eigen::Vector4d wrench(total_thrust, torque.x(), torque.y(), torque.z());
   Eigen::Vector4d motor_cmd = allocation_inv_ * wrench;

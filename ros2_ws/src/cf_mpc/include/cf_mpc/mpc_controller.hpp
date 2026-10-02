@@ -42,7 +42,7 @@ struct AttitudeCommand {
   double pitch = 0.0;         // rad
   double yaw_rate = 0.0;      // rad/s
   double thrust = 0.0;        // N, total
-  double thrust_pwm = 0.0;    // 0..pwm_max, per motor (firmware "base thrust")
+  double thrust_cmd = 0.0;    // 0..65535, per motor (firmware "base thrust")
 };
 
 struct MpcOutput {

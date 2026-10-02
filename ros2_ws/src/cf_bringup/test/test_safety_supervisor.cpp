@@ -21,7 +21,7 @@ class SupervisorTest : public ::testing::Test {
     in.command.roll = 0.1;
     in.command.pitch = -0.1;
     in.command.yaw_rate = 0.2;
-    in.command.thrust_pwm = 40000.0;
+    in.command.thrust_cmd = 40000.0;
     return in;
   }
 };
@@ -32,7 +32,7 @@ TEST_F(SupervisorTest, HealthyCommandPassesThrough) {
   EXPECT_DOUBLE_EQ(out.command.roll, 0.1);
   EXPECT_DOUBLE_EQ(out.command.pitch, -0.1);
   EXPECT_DOUBLE_EQ(out.command.yaw_rate, 0.2);
-  EXPECT_DOUBLE_EQ(out.command.thrust_pwm, 40000.0);
+  EXPECT_DOUBLE_EQ(out.command.thrust_cmd, 40000.0);
 }
 
 TEST_F(SupervisorTest, SaturatesCommand) {
@@ -40,12 +40,12 @@ TEST_F(SupervisorTest, SaturatesCommand) {
   in.command.roll = 2.0;
   in.command.pitch = -2.0;
   in.command.yaw_rate = 10.0;
-  in.command.thrust_pwm = 70000.0;
+  in.command.thrust_cmd = 70000.0;
   const cf_bringup::SupervisorOutput out = supervisor_.step(in);
   EXPECT_DOUBLE_EQ(out.command.roll, config_.max_tilt);
   EXPECT_DOUBLE_EQ(out.command.pitch, -config_.max_tilt);
   EXPECT_DOUBLE_EQ(out.command.yaw_rate, config_.max_yaw_rate);
-  EXPECT_DOUBLE_EQ(out.command.thrust_pwm, config_.max_thrust_pwm);
+  EXPECT_DOUBLE_EQ(out.command.thrust_cmd, config_.max_thrust_cmd);
 }
 
 TEST_F(SupervisorTest, KillSwitchStopsAndLatches) {
@@ -54,11 +54,11 @@ TEST_F(SupervisorTest, KillSwitchStopsAndLatches) {
   cf_bringup::SupervisorOutput out = supervisor_.step(in);
   EXPECT_EQ(out.mode, cf_bringup::Mode::kStopped);
   EXPECT_EQ(out.stop_reason, "kill switch");
-  EXPECT_DOUBLE_EQ(out.command.thrust_pwm, 0.0);
+  EXPECT_DOUBLE_EQ(out.command.thrust_cmd, 0.0);
   // Releasing the key does not restart the motors.
   out = supervisor_.step(healthy(1.1));
   EXPECT_EQ(out.mode, cf_bringup::Mode::kStopped);
-  EXPECT_DOUBLE_EQ(out.command.thrust_pwm, 0.0);
+  EXPECT_DOUBLE_EQ(out.command.thrust_cmd, 0.0);
   // Only an explicit reset does.
   supervisor_.reset();
   out = supervisor_.step(healthy(1.2));

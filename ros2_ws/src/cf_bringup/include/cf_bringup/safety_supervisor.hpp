@@ -18,7 +18,7 @@ namespace cf_bringup {
 struct SafetyConfig {
   double max_tilt = 0.0;             // rad
   double max_yaw_rate = 0.0;         // rad/s
-  double max_thrust_pwm = 0.0;       // -
+  double max_thrust_cmd = 0.0;       // -
   double watchdog_timeout = 0.0;     // s
   int max_solver_failures = 0;       // -
   Eigen::Vector3d geofence_min = Eigen::Vector3d::Zero();  // m
@@ -31,7 +31,7 @@ struct Command {
   double roll = 0.0;        // rad
   double pitch = 0.0;       // rad
   double yaw_rate = 0.0;    // rad/s
-  double thrust_pwm = 0.0;  // per motor, 0 = motors off
+  double thrust_cmd = 0.0;  // per motor, 0 = motors off
 };
 
 struct SupervisorInput {
@@ -47,7 +47,7 @@ struct SupervisorInput {
 enum class Mode { kActive, kStopped };
 
 struct SupervisorOutput {
-  Command command;          // what to send; thrust_pwm = 0 when stopped
+  Command command;          // what to send; thrust_cmd = 0 when stopped
   Mode mode = Mode::kActive;
   std::string stop_reason;  // empty while active
 };

@@ -131,7 +131,7 @@ MpcOutput MpcController::compute(const VehicleState& state, const Reference& ref
                             -cf_mpc_constants::kMaxYawRate,
                             cf_mpc_constants::kMaxYawRate);
 
-  cmd.thrust_pwm = cf_model::pwm_from_thrust_per_motor(params_, cmd.thrust / 4.0);
+  cmd.thrust_cmd = cf_model::cmd_from_thrust_per_motor(params_, cmd.thrust / 4.0);
   return output;
 }
 

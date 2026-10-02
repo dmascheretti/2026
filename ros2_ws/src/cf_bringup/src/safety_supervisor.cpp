@@ -31,7 +31,7 @@ SafetyConfig load_safety_config(const std::string& yaml_path) {
   SafetyConfig c;
   c.max_tilt = require(root, "max_tilt").as<double>();
   c.max_yaw_rate = require(root, "max_yaw_rate").as<double>();
-  c.max_thrust_pwm = require(root, "max_thrust_pwm").as<double>();
+  c.max_thrust_cmd = require(root, "max_thrust_cmd").as<double>();
   c.watchdog_timeout = require(root, "watchdog_timeout").as<double>();
   c.max_solver_failures = require(root, "max_solver_failures").as<int>();
   c.geofence_min = read_vector3(root, "geofence_min");
@@ -95,8 +95,8 @@ SupervisorOutput SafetySupervisor::step(const SupervisorInput& input) {
   output.command.pitch = std::clamp(input.command.pitch, -config_.max_tilt, config_.max_tilt);
   output.command.yaw_rate =
       std::clamp(input.command.yaw_rate, -config_.max_yaw_rate, config_.max_yaw_rate);
-  output.command.thrust_pwm =
-      std::clamp(input.command.thrust_pwm, 0.0, config_.max_thrust_pwm);
+  output.command.thrust_cmd =
+      std::clamp(input.command.thrust_cmd, 0.0, config_.max_thrust_cmd);
   return output;
 }
 
