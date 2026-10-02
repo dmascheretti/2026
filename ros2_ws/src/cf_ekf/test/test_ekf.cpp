@@ -44,13 +44,10 @@ TEST_F(EkfTest, GyroRollRateIntegrates) {
   EXPECT_NEAR(x1(cf_ekf::ROLL), 0.005, 1e-12);
 }
 
-TEST_F(EkfTest, NumericJacobianMatchesHandDerivedAtHover) {
-  // At hover: d(px)/d(vx) = dt, d(vx)/d(pitch) = g*dt, d(vy)/d(roll) = -g*dt.
+TEST_F(EkfTest, PropagateDerivativesMatchHandDerivedAtHover) {
+  // At hover: d(vx)/d(pitch) = g*dt, d(vy)/d(roll) = -g*dt.
+  // Checked by finite differences of propagate().
   const double dt = 0.01;
-  ekf_.reset(cf_ekf::StateVector::Zero());
-  const cf_ekf::StateMatrix P0 = ekf_.covariance();
-  // Recover F from one prediction with zero process noise contribution:
-  // P1 = F P0 F^T + Q. Instead test the propagate function directly.
   const double h = 1e-6;
   cf_ekf::StateVector x = cf_ekf::StateVector::Zero();
   cf_ekf::StateVector xp = x;
@@ -63,7 +60,6 @@ TEST_F(EkfTest, NumericJacobianMatchesHandDerivedAtHover) {
   const double dvy_droll =
       (ekf_.propagate(xp, hover_imu(), dt)(cf_ekf::VY) - ekf_.propagate(x, hover_imu(), dt)(cf_ekf::VY)) / h;
   EXPECT_NEAR(dvy_droll, -params_.gravity * dt, 1e-6);
-  EXPECT_GT(P0(0, 0), 0.0);
 }
 
 TEST_F(EkfTest, RangeModelAccountsForTilt) {
