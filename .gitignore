@@ -1,0 +1,19 @@
+# ROS 2 / colcon
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# acados generated solver
+mpc_codegen/c_generated_code/
+*.json.bak
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Logs and editors
+*.bag
+*.mcap
+.vscode/
+.idea/
