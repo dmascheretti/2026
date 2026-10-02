@@ -1,0 +1,87 @@
+# Physical parameters of the Crazyflie 2.1 (+ Flow deck v2).
+#
+# This is the ONLY place where physical parameters live. Every entry has:
+#   value   numeric value (scalar or list)
+#   unit    SI unit
+#   source  where the number comes from (key into `sources` below)
+#   status  datasheet | literature | own_id
+#             datasheet  = manufacturer number
+#             literature = measured by someone else on a Crazyflie 2.0/2.1
+#             own_id     = measured by us on our own vehicle
+#
+# Values marked `literature` were identified on a Crazyflie 2.0 (same frame
+# and motor size as the 2.1). They are starting values for simulation and
+# get replaced by `own_id` values in the identification phase.
+#
+# Derived quantities (hover thrust, arm projection on body axes, ...) are
+# NOT stored here; they are computed in code from these entries.
+
+sources:
+  bitcraze_cf21: "Bitcraze, Crazyflie 2.1 datasheet (bitcraze.io)"
+  bitcraze_flow: "Bitcraze, Flow deck v2 datasheet (bitcraze.io)"
+  foerster2015: "J. Foerster, System Identification of the Crazyflie 2.0 Nano Quadrocopter, BSc thesis, ETH Zurich, 2015"
+  standard: "Standard physical constant"
+  cf_firmware: "Crazyflie firmware: motor command is a uint16 (github.com/bitcraze/crazyflie-firmware)"
+
+environment:
+  gravity:
+    value: 9.81
+    unit: m/s^2
+    source: standard
+    status: datasheet
+
+body:
+  mass_base:
+    # Bare Crazyflie 2.1 takeoff weight, with stock battery.
+    value: 0.027
+    unit: kg
+    source: bitcraze_cf21
+    status: datasheet
+  mass_flow_deck:
+    value: 0.0016
+    unit: kg
+    source: bitcraze_flow
+    status: datasheet
+  motor_to_motor_diagonal:
+    # Diagonal distance between motor axes (datasheet "92 mm motor to motor").
+    # Arm length from center = half of this. X configuration.
+    value: 0.092
+    unit: m
+    source: bitcraze_cf21
+    status: datasheet
+  inertia:
+    # Full inertia tensor about the center of mass, body frame, row-major 3x3.
+    value: [1.6571710e-5, 0.0830806e-5, 0.0718277e-5,
+            0.0830806e-5, 1.6655602e-5, 0.1800197e-5,
+            0.0718277e-5, 0.1800197e-5, 2.9261652e-5]
+    unit: kg*m^2
+    source: foerster2015
+    status: literature
+
+rotor:
+  thrust_coefficient:
+    # Thrust per motor: F = k_f * omega^2, omega in rpm.
+    value: 3.16e-10
+    unit: N/rpm^2
+    source: foerster2015
+    status: literature
+  torque_coefficient:
+    # Drag torque per motor: M = k_m * omega^2, omega in rpm.
+    value: 7.94e-12
+    unit: N*m/rpm^2
+    source: foerster2015
+    status: literature
+  thrust_pwm_poly:
+    # Thrust per motor as a function of the 16-bit motor command (0..65535):
+    #   F = c2 * pwm^2 + c1 * pwm + c0
+    # Listed as [c2, c1, c0]. Needed to map MPC thrust (N) to the
+    # cflib thrust setpoint. Verify on our motors/battery in identification.
+    value: [2.130295e-11, 1.032633e-6, 5.484560e-4]
+    unit: N
+    source: foerster2015
+    status: literature
+  pwm_max:
+    value: 65535
+    unit: "-"
+    source: cf_firmware
+    status: datasheet
