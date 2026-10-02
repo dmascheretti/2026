@@ -37,6 +37,7 @@ struct EkfConfig {
   double range_max = 0.0;             // m
   double flow_min_height = 0.0;       // m
   double outlier_threshold = 0.0;     // -
+  int max_consecutive_rejections = 0; // -
   double initial_position_std = 0.0;  // m
   double initial_velocity_std = 0.0;  // m/s
   double initial_attitude_std = 0.0;  // rad
@@ -82,15 +83,18 @@ class Ekf {
 
  private:
   // Generic scalar / vector EKF update with numeric Jacobian H.
+  // rejection_count: consecutive rejections of this measurement type.
   template <int M, typename MeasurementFunction>
   UpdateResult update(const Eigen::Matrix<double, M, 1>& z,
                       const Eigen::Matrix<double, M, M>& R,
-                      MeasurementFunction h);
+                      MeasurementFunction h, int& rejection_count);
 
   cf_model::Params params_;
   EkfConfig config_;
   StateVector x_ = StateVector::Zero();
   StateMatrix P_ = StateMatrix::Identity();
+  int range_rejections_ = 0;
+  int flow_rejections_ = 0;
 };
 
 }  // namespace cf_ekf

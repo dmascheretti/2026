@@ -10,6 +10,7 @@ flow_noise: 2.0             # pixels    optical flow, per sample
 range_max: 4.0              # m         ignore range readings above this
 flow_min_height: 0.1        # m         flow is unusable closer than this
 outlier_threshold: 25.0     # -         reject if Mahalanobis^2 > this
+max_consecutive_rejections: 10  # -     then accept again (filter is lost)
 
 initial_position_std: 0.1   # m
 initial_velocity_std: 0.1   # m/s

@@ -90,6 +90,20 @@ TEST_F(EkfTest, OutlierRangeIsRejected) {
   EXPECT_FALSE(ekf_.update_range(10.0).accepted);  // above range_max
 }
 
+TEST_F(EkfTest, PersistentRangeDisagreementIsAcceptedEventually) {
+  // Filter is wrong (thinks 1 m) while the sensor keeps saying 2 m.
+  cf_ekf::StateVector x0 = cf_ekf::StateVector::Zero();
+  x0(cf_ekf::PZ) = 1.0;
+  ekf_.reset(x0);
+  int rejected = 0;
+  for (int i = 0; i < config_.max_consecutive_rejections; ++i) {
+    if (!ekf_.update_range(2.0).accepted) ++rejected;
+  }
+  EXPECT_EQ(rejected, config_.max_consecutive_rejections);
+  EXPECT_TRUE(ekf_.update_range(2.0).accepted);
+  EXPECT_GT(ekf_.state()(cf_ekf::PZ), 1.5);
+}
+
 // Drone drifts at constant velocity at 1 m height. The filter starts with
 // the wrong height and zero velocity and must converge.
 void run_constant_velocity_flight(cf_ekf::Ekf& ekf, const cf_model::Params& params,

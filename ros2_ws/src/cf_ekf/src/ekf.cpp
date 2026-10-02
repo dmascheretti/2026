@@ -32,6 +32,7 @@ EkfConfig load_ekf_config(const std::string& yaml_path) {
   c.range_max = read(root, "range_max");
   c.flow_min_height = read(root, "flow_min_height");
   c.outlier_threshold = read(root, "outlier_threshold");
+  c.max_consecutive_rejections = static_cast<int>(read(root, "max_consecutive_rejections"));
   c.initial_position_std = read(root, "initial_position_std");
   c.initial_velocity_std = read(root, "initial_velocity_std");
   c.initial_attitude_std = read(root, "initial_attitude_std");
@@ -45,6 +46,8 @@ Ekf::Ekf(const cf_model::Params& params, const EkfConfig& config)
 
 void Ekf::reset(const StateVector& x0) {
   x_ = x0;
+  range_rejections_ = 0;
+  flow_rejections_ = 0;
   P_.setZero();
   for (int i = PX; i <= PZ; ++i) {
     P_(i, i) = config_.initial_position_std * config_.initial_position_std;
@@ -140,7 +143,7 @@ Eigen::Vector2d Ekf::predict_flow(const StateVector& x, const FlowSample& flow) 
 template <int M, typename MeasurementFunction>
 UpdateResult Ekf::update(const Eigen::Matrix<double, M, 1>& z,
                          const Eigen::Matrix<double, M, M>& R,
-                         MeasurementFunction h) {
+                         MeasurementFunction h, int& rejection_count) {
   // Numeric Jacobian H = dh/dx.
   Eigen::Matrix<double, M, kNx> H;
   for (int i = 0; i < kNx; ++i) {
@@ -157,9 +160,15 @@ UpdateResult Ekf::update(const Eigen::Matrix<double, M, 1>& z,
 
   UpdateResult result;
   result.mahalanobis_sq = innovation.dot(S_inv * innovation);
-  if (result.mahalanobis_sq > config_.outlier_threshold) {
+  // Outlier gate. If a sensor is rejected many times in a row, the filter
+  // (not the sensor) is most likely wrong, e.g. after a crash, so the
+  // measurement is accepted again to pull the estimate back.
+  if (result.mahalanobis_sq > config_.outlier_threshold &&
+      rejection_count < config_.max_consecutive_rejections) {
+    ++rejection_count;
     return result;  // rejected as outlier
   }
+  rejection_count = 0;
 
   const Eigen::Matrix<double, kNx, M> K = P_ * H.transpose() * S_inv;
   x_ += K * innovation;
@@ -172,7 +181,7 @@ UpdateResult Ekf::update(const Eigen::Matrix<double, M, 1>& z,
 }
 
 UpdateResult Ekf::update_range(double range) {
-  if (range <= 0.0 || range > config_.range_max) {
+  if (range < 0.0 || range > config_.range_max) {
     return UpdateResult{};
   }
   Eigen::Matrix<double, 1, 1> z;
@@ -183,7 +192,7 @@ UpdateResult Ekf::update_range(double range) {
     Eigen::Matrix<double, 1, 1> y;
     y << predict_range(x);
     return y;
-  });
+  }, range_rejections_);
 }
 
 UpdateResult Ekf::update_flow(const FlowSample& flow) {
@@ -195,7 +204,7 @@ UpdateResult Ekf::update_flow(const FlowSample& flow) {
       Eigen::Matrix2d::Identity() * config_.flow_noise * config_.flow_noise;
   return update<2>(z, R, [this, &flow](const StateVector& x) {
     return Eigen::Vector2d(predict_flow(x, flow));
-  });
+  }, flow_rejections_);
 }
 
 }  // namespace cf_ekf
