@@ -14,63 +14,14 @@
 #include <string>
 #include <vector>
 
-#include <yaml-cpp/yaml.h>
-
 #include "cf_bringup/safety_supervisor.hpp"
+#include "cf_bringup/scenario.hpp"
 #include "cf_ekf/ekf.hpp"
 #include "cf_model/params.hpp"
 #include "cf_mpc/mpc_controller.hpp"
 #include "plant.hpp"
 
 namespace {
-
-struct Waypoint {
-  double time = 0.0;                                   // s
-  Eigen::Vector3d position = Eigen::Vector3d::Zero();  // m
-  double yaw = 0.0;                                    // rad
-};
-
-struct Scenario {
-  double duration = 0.0;
-  Eigen::Vector3d initial_position = Eigen::Vector3d::Zero();
-  bool use_ekf = true;
-  double kill_time = -1.0;  // s, < 0: never
-  std::vector<Waypoint> waypoints;
-};
-
-Scenario load_scenario(const std::string& path) {
-  const YAML::Node root = YAML::LoadFile(path);
-  Scenario s;
-  s.duration = root["duration"].as<double>();
-  const YAML::Node p0 = root["initial_position"];
-  s.initial_position = Eigen::Vector3d(p0[0].as<double>(), p0[1].as<double>(), p0[2].as<double>());
-  s.use_ekf = root["use_ekf"].as<bool>();
-  if (root["kill_time"]) {
-    s.kill_time = root["kill_time"].as<double>();
-  }
-  for (const YAML::Node& w : root["waypoints"]) {
-    Waypoint wp;
-    wp.time = w[0].as<double>();
-    wp.position = Eigen::Vector3d(w[1].as<double>(), w[2].as<double>(), w[3].as<double>());
-    wp.yaw = w[4].as<double>();
-    s.waypoints.push_back(wp);
-  }
-  if (s.waypoints.empty()) {
-    throw std::runtime_error("scenario has no waypoints");
-  }
-  return s;
-}
-
-// The waypoint active at time t (the last one whose time has passed).
-const Waypoint& waypoint_at(const Scenario& s, double t) {
-  const Waypoint* active = &s.waypoints.front();
-  for (const Waypoint& wp : s.waypoints) {
-    if (wp.time <= t) {
-      active = &wp;
-    }
-  }
-  return *active;
-}
 
 // Number of physics steps between two events at the given rate.
 int steps_per_event(double physics_rate, double rate) {
@@ -100,7 +51,7 @@ int main(int argc, char** argv) {
 
   const cf_model::Params params = cf_model::load_params(CF_PARAMS_FILE);
   const sim::SimConfig sim_config = sim::load_sim_config(sim_file);
-  const Scenario scenario = load_scenario(scenario_file);
+  const cf_bringup::Scenario scenario = cf_bringup::load_scenario(scenario_file);
   const cf_ekf::EkfConfig ekf_config = cf_ekf::load_ekf_config(CF_EKF_CONFIG);
   const cf_bringup::SafetyConfig safety_config = cf_bringup::load_safety_config(CF_SAFETY_CONFIG);
 
@@ -169,7 +120,7 @@ int main(int argc, char** argv) {
     // ---- MPC + supervisor ----
     if (step % control_every == 0) {
       const sim::TrueState& truth = quad.state();
-      const Eigen::Vector3d true_euler = sim::euler_zyx(truth.attitude.toRotationMatrix());
+      const Eigen::Vector3d true_euler = cf_model::euler_zyx(truth.attitude.toRotationMatrix());
 
       cf_mpc::VehicleState estimate;
       if (scenario.use_ekf) {
@@ -189,11 +140,11 @@ int main(int argc, char** argv) {
 
       cf_mpc::Reference reference;
       for (int k = 0; k <= horizon; ++k) {
-        const Waypoint& wp = waypoint_at(scenario, t + k * mpc.sample_time());
+        const cf_bringup::Waypoint& wp = cf_bringup::waypoint_at(scenario, t + k * mpc.sample_time());
         reference.positions.push_back(wp.position);
         reference.velocities.push_back(Eigen::Vector3d::Zero());
       }
-      const Waypoint& current_wp = waypoint_at(scenario, t);
+      const cf_bringup::Waypoint& current_wp = cf_bringup::waypoint_at(scenario, t);
       reference.yaw = current_wp.yaw;
 
       const cf_mpc::MpcOutput mpc_out = mpc.compute(estimate, reference);

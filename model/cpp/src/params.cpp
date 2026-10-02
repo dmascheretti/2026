@@ -110,4 +110,11 @@ Eigen::Matrix3d rotation_zyx(double phi, double theta, double psi) {
   return rz * ry * rx;
 }
 
+Eigen::Vector3d euler_zyx(const Eigen::Matrix3d& R) {
+  const double roll = std::atan2(R(2, 1), R(2, 2));
+  const double pitch = -std::asin(std::clamp(R(2, 0), -1.0, 1.0));
+  const double yaw = std::atan2(R(1, 0), R(0, 0));
+  return Eigen::Vector3d(roll, pitch, yaw);
+}
+
 }  // namespace cf_model

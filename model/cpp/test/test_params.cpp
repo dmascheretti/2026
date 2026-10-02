@@ -61,4 +61,10 @@ TEST(Rotation, SmallPitchTiltsThrustTowardsPositiveX) {
   EXPECT_LT(z_body_roll.y(), 0.0);
 }
 
+TEST(Rotation, EulerRoundTrip) {
+  const Eigen::Vector3d angles(0.1, -0.2, 2.5);
+  const Eigen::Vector3d back = cf_model::euler_zyx(cf_model::rotation_zyx(angles.x(), angles.y(), angles.z()));
+  EXPECT_LT((back - angles).norm(), 1e-12);
+}
+
 }  // namespace

@@ -50,13 +50,6 @@ SimConfig load_sim_config(const std::string& yaml_path) {
   return c;
 }
 
-Eigen::Vector3d euler_zyx(const Eigen::Matrix3d& R) {
-  const double roll = std::atan2(R(2, 1), R(2, 2));
-  const double pitch = -std::asin(std::clamp(R(2, 0), -1.0, 1.0));
-  const double yaw = std::atan2(R(1, 0), R(0, 0));
-  return Eigen::Vector3d(roll, pitch, yaw);
-}
-
 Quadrotor::Quadrotor(const cf_model::Params& params, const SimConfig& config)
     : params_(params), config_(config), rng_(config.random_seed) {
   true_mass_ = params_.mass * config_.mass_factor;
@@ -88,7 +81,7 @@ Eigen::Vector4d Quadrotor::inner_controller() const {
   if (setpoint_.thrust_cmd <= 0.0) {
     return Eigen::Vector4d::Zero();
   }
-  const Eigen::Vector3d euler = euler_zyx(state_.attitude.toRotationMatrix());
+  const Eigen::Vector3d euler = cf_model::euler_zyx(state_.attitude.toRotationMatrix());
 
   // Angle loop -> body rate setpoint, then rate loop -> angular acceleration.
   Eigen::Vector3d rate_setpoint;

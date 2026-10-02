@@ -49,4 +49,7 @@ double max_total_thrust(const Params& p);
 // Rotation body -> world, ZYX Euler angles (yaw psi, pitch theta, roll phi).
 Eigen::Matrix3d rotation_zyx(double phi, double theta, double psi);
 
+// Inverse of rotation_zyx: [roll, pitch, yaw] of a body -> world rotation.
+Eigen::Vector3d euler_zyx(const Eigen::Matrix3d& R);
+
 }  // namespace cf_model

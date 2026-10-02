@@ -51,9 +51,6 @@ struct TrueState {
   bool on_ground = true;
 };
 
-// ZYX Euler angles [roll, pitch, yaw] of a body->world rotation.
-Eigen::Vector3d euler_zyx(const Eigen::Matrix3d& R);
-
 class Quadrotor {
  public:
   Quadrotor(const cf_model::Params& params, const SimConfig& config);
